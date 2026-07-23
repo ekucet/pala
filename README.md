@@ -15,7 +15,7 @@ Lightweight, **zero-dependency**, drop-in. One import, one call.
 ![Platform](https://img.shields.io/badge/platform-iOS%2016%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
-![Version](https://img.shields.io/badge/version-1.0.1-blueviolet)
+![Version](https://img.shields.io/badge/version-1.0.2-blueviolet)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 </div>
@@ -147,6 +147,28 @@ Text("Sign In")
 | Reflected SwiftUI font | Fed from a design system (no `import Pala`) |
 |:---:|:---:|
 | <img src="docs/swiftui-inspector.png" width="200"> | <img src="docs/uikit-inspector.png" width="200"> |
+
+### Colors, by name
+
+Register your palette once and the inspector prints the **token name** instead of a
+bare hex — everywhere it resolves a color:
+
+```swift
+#if DEBUG
+Pala.registerColors([
+    ("Primary6",         UIColor(named: "Primary6")!),
+    ("TextLightPrimary", UIColor(named: "TextLightPrimary")!),
+])
+#endif
+// inspector now shows:  Primary6 · #0F62FE
+```
+
+A registered token wins over the system color it happens to resemble.
+
+And because SwiftUI `Text` exposes **no** color property, tapping one reports a
+**Drawn color** sampled from the rendered pixels — the dominant opaque color, i.e. the
+ink you actually see. That works no matter how the color was applied
+(`foregroundColor`, `foregroundStyle`, or your own modifier).
 
 ---
 

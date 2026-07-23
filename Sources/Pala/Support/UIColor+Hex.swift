@@ -38,19 +38,24 @@ extension UIColor {
         return text
     }
 
-    /// Renk bilinen bir sistem rengiyle eşleşiyorsa adını döndürür (ör. "systemBlue").
+    /// The color's name: a **registered design-system token** first (e.g. "Primary.six"),
+    /// otherwise a known system color (e.g. "systemBlue"). Nil if neither matches.
     var inspectorName: String? {
+        // An app-registered token wins — it's more meaningful than the system
+        // color it happens to resemble.
+        if let token = PalaPalette.name(for: self) { return token }
+
         let trait = UITraitCollection.current
-        guard let mine = resolvedRGB(trait) else { return nil }
+        guard let mine = palaResolvedRGB(trait) else { return nil }
         for (name, color) in UIColor.inspectorKnownColors {
-            if let other = color.resolvedRGB(trait), UIColor.approxEqual(mine, other) {
+            if let other = color.palaResolvedRGB(trait), UIColor.palaApproxEqual(mine, other) {
                 return name
             }
         }
         return nil
     }
 
-    private func resolvedRGB(_ trait: UITraitCollection) -> (CGFloat, CGFloat, CGFloat)? {
+    func palaResolvedRGB(_ trait: UITraitCollection) -> (CGFloat, CGFloat, CGFloat)? {
         let c = resolvedColor(with: trait)
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         if c.getRed(&r, green: &g, blue: &b, alpha: &a) { return (r, g, b) }
@@ -59,8 +64,8 @@ extension UIColor {
         return nil
     }
 
-    private static func approxEqual(_ x: (CGFloat, CGFloat, CGFloat),
-                                    _ y: (CGFloat, CGFloat, CGFloat)) -> Bool {
+    static func palaApproxEqual(_ x: (CGFloat, CGFloat, CGFloat),
+                                _ y: (CGFloat, CGFloat, CGFloat)) -> Bool {
         abs(x.0 - y.0) < 0.03 && abs(x.1 - y.1) < 0.03 && abs(x.2 - y.2) < 0.03
     }
 

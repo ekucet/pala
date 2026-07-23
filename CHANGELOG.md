@@ -2,6 +2,19 @@
 
 All notable changes to **Pala** are documented here.
 
+## [1.0.2] — 2026-07-23
+
+### Added
+- **Color names from your design system.** `Pala.registerColors(_:)` registers named
+  tokens, so the inspector prints `Primary6 · #0F62FE` instead of a bare hex —
+  everywhere it resolves a color (UIKit text, backgrounds, layers, `.palaInspect`
+  metadata). A registered token wins over the system color it resembles.
+- **Drawn-color sampling.** SwiftUI `Text` has no readable color property (it's drawn
+  into a `CALayer`), so tapping one now reports a **Drawn color** sampled from the
+  rendered pixels — the dominant opaque color, i.e. the ink the user actually sees.
+  Works regardless of how the color was applied (`foregroundColor`, `foregroundStyle`,
+  or a design-system modifier).
+
 ## [1.0.1] — 2026-07-23
 
 ### Added

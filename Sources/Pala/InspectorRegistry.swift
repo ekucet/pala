@@ -44,13 +44,16 @@ final class InspectorRegistry {
     /// store); in a hostless test bundle there is no application, so we go
     /// through the ObjC `sharedApplication` selector (which returns `nil` rather
     /// than trapping like the Swift accessor) and fall back to a static object.
-    private var storeAnchor: AnyObject {
+    /// Shared by every process-global Pala store (metadata registry, palette…).
+    nonisolated static var storeAnchorObject: AnyObject {
         let sel = NSSelectorFromString("sharedApplication")
         if let app = (UIApplication.self as AnyObject).perform(sel)?.takeUnretainedValue() {
             return app
         }
-        return Self.fallbackAnchor
+        return fallbackAnchor
     }
+
+    private var storeAnchor: AnyObject { Self.storeAnchorObject }
 
     /// The shared backing store — one `NSMutableDictionary` per process, reachable
     /// from every linked copy of Pala.

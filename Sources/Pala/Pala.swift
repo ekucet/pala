@@ -22,7 +22,7 @@ public enum Pala {
 
     /// The running Pala version — shown in the hub menu so you can confirm which
     /// build is actually installed (a stale app binary is the usual "nothing changed").
-    public static let version = "1.0.1"
+    public static let version = "1.0.2"
 
     /// Installs the floating debug hub.
     @MainActor
@@ -40,6 +40,32 @@ public enum Pala {
     @MainActor
     public static var isEnabled: Bool {
         PalaHub.shared.isEnabled
+    }
+
+    // MARK: - Design-system palette
+
+    /// Registers named design-system colors so the inspector reports the **token
+    /// name** instead of a bare hex — `Primary.six · #0F62FE` rather than `#0F62FE`.
+    ///
+    /// Applies everywhere Pala resolves a color: UIKit text and backgrounds, layer
+    /// colors, `.palaInspect` metadata, and the color sampled from SwiftUI-drawn
+    /// text. Register once at startup, most specific tokens first (first match wins).
+    ///
+    /// ```swift
+    /// #if DEBUG
+    /// Pala.registerColors([
+    ///     ("Primary.six", UIColor(Color.YKColor.Primary.six)),
+    ///     ("TextLight.primary", UIColor(Color.YKColor.TextLight.primary)),
+    /// ])
+    /// #endif
+    /// ```
+    public static func registerColors(_ colors: [(String, UIColor)]) {
+        PalaPalette.register(colors)
+    }
+
+    /// Clears every color registered with `registerColors(_:)`.
+    public static func clearRegisteredColors() {
+        PalaPalette.removeAll()
     }
 
     // MARK: - Console API

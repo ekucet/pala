@@ -387,6 +387,13 @@ enum ViewInspector {
         let hasContents = layer.contents != nil
         if hasContents {
             katman.append(InspectedProperty(label: "Contents", value: "yes (image/drawing)"))
+            // SwiftUI text/shapes expose no color property — sample the drawn
+            // pixels so the card still reports the color the user actually sees.
+            if let drawn = LayerColorSampler.dominantColor(of: layer) {
+                katman.append(InspectedProperty(label: "Drawn color",
+                                                value: drawn.inspectorDescription,
+                                                swatch: drawn))
+            }
         }
         if let bg = layer.backgroundColor {
             let c = UIColor(cgColor: bg)
