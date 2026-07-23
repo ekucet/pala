@@ -29,8 +29,24 @@ enum ViewInspector {
         //  4 = UIKit sarmalayıcı/container
         var scored: [(el: InspectedElement, prio: Int)] = []
 
+        // SwiftUI text carries no color property. Sample the drawn pixels once and
+        // lend that color to annotated entries that don't declare one, so font and
+        // color show up together on the card the user actually tapped.
+        var sampledCache: UIColor??
+        func sampledDrawnColor(in frame: CGRect) -> UIColor? {
+            if let cached = sampledCache { return cached }
+            // Fast path: a per-text bitmap layer. Fallback: render the region and
+            // separate the glyphs from the background (SwiftUI often draws text
+            // straight into a shared layer, leaving nothing per-text to sample).
+            let color = drawnColor(at: pointInWindow, in: window)
+                ?? LayerColorSampler.inkColor(in: frame, of: window)
+            sampledCache = .some(color)
+            return color
+        }
+
         for meta in InspectorRegistry.shared.metadataStack(at: pointInWindow) {
-            scored.append((element(from: meta), 0))
+            let fallback = meta.textColor == nil ? sampledDrawnColor(in: meta.frameInWindow) : nil
+            scored.append((element(from: meta, sampledColor: fallback), 0))
         }
         for leaf in accessibilityLeaves(in: window) where leaf.frameInWindow.contains(pointInWindow) {
             scored.append((element(from: leaf), 2))
@@ -68,6 +84,33 @@ enum ViewInspector {
             if out.count >= 14 { break }
         }
         return out
+    }
+
+    /// Color of the smallest drawn layer under the point. SwiftUI renders text into
+    /// such a layer, so its dominant opaque pixel color is the ink the user sees.
+    private static func drawnColor(at point: CGPoint, in window: UIWindow) -> UIColor? {
+        var best: (area: CGFloat, layer: CALayer)?
+        var visited = 0
+
+        func walk(_ layer: CALayer, depth: Int) {
+            guard visited < 400, depth < 32 else { return }
+            for sub in layer.sublayers ?? [] {
+                visited += 1
+                if sub.isHidden || sub.opacity < 0.02 { continue }
+                if sub.contents != nil {
+                    let frame = window.layer.convert(sub.bounds, from: sub)
+                    if frame.contains(point), frame.width >= 4, frame.height >= 4 {
+                        let area = frame.width * frame.height
+                        if best == nil || area < best!.area { best = (area, sub) }
+                    }
+                }
+                walk(sub, depth: depth + 1)
+            }
+        }
+        walk(window.layer, depth: 0)
+
+        guard let layer = best?.layer else { return nil }
+        return LayerColorSampler.dominantColor(of: layer)
     }
 
     private static func isContentView(_ v: UIView) -> Bool {
@@ -390,7 +433,7 @@ enum ViewInspector {
             // SwiftUI text/shapes expose no color property — sample the drawn
             // pixels so the card still reports the color the user actually sees.
             if let drawn = LayerColorSampler.dominantColor(of: layer) {
-                katman.append(InspectedProperty(label: "Drawn color",
+                katman.append(InspectedProperty(label: "Color",
                                                 value: drawn.inspectorDescription,
                                                 swatch: drawn))
             }
@@ -477,7 +520,8 @@ enum ViewInspector {
 
     // MARK: - SwiftUI metadata → element
 
-    private static func element(from meta: SwiftUIMetadata) -> InspectedElement {
+    private static func element(from meta: SwiftUIMetadata,
+                                sampledColor: UIColor? = nil) -> InspectedElement {
         var geometry: [InspectedProperty] = [
             InspectedProperty(label: "Origin", value: format(point: meta.frameInWindow.origin)),
             InspectedProperty(label: "Size", value: format(size: meta.frameInWindow.size))
@@ -501,6 +545,11 @@ enum ViewInspector {
             typography.append(InspectedProperty(label: "Text color",
                                                 value: color.inspectorDescription,
                                                 swatch: color))
+        } else if let sampled = sampledColor {
+            // No declared color — report what was actually drawn.
+            typography.append(InspectedProperty(label: "Color",
+                                                value: sampled.inspectorDescription,
+                                                swatch: sampled))
         }
 
         var layout: [InspectedProperty] = []

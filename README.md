@@ -15,7 +15,7 @@ Lightweight, **zero-dependency**, drop-in. One import, one call.
 ![Platform](https://img.shields.io/badge/platform-iOS%2016%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
-![Version](https://img.shields.io/badge/version-1.0.2-blueviolet)
+![Version](https://img.shields.io/badge/version-1.0.3-blueviolet)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 </div>

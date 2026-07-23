@@ -2,6 +2,18 @@
 
 All notable changes to **Pala** are documented here.
 
+## [1.0.3] — 2026-07-23
+
+### Fixed
+- **The sampled color now actually shows up**, next to the font on the card you tapped.
+  1.0.2 put it on a separate layer entry under a label the compact card filtered out,
+  so in practice it was invisible. Annotated SwiftUI entries without a declared color
+  now borrow the sampled one, and the row is labelled `Color`.
+- **Sampling no longer depends on a per-text bitmap layer.** SwiftUI often draws text
+  straight into a shared layer, leaving nothing per-element to sample. When that's the
+  case Pala renders the element's region and separates glyphs from background — the most
+  common color is the background, the first clearly different one is the ink.
+
 ## [1.0.2] — 2026-07-23
 
 ### Added
