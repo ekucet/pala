@@ -22,6 +22,9 @@ final class PalaHub: NSObject {
     private let bubble = UIButton(type: .custom)
     private var menu: UIView?
 
+    /// The Pala face shown in the bubble (embedded — see `PalaAsset`).
+    private static let faceImage: UIImage? = PalaAsset.face
+
     private let grid = GridOverlayView()
     private let frames = FramesOverlayView()
     private var console: ConsolePanelView?
@@ -75,14 +78,30 @@ final class PalaHub: NSObject {
     private func setupBubble(in rootView: UIView) {
         bubble.frame = CGRect(x: 0, y: 0, width: 52, height: 52)
         bubble.accessibilityIdentifier = "pala.bubble"
-        bubble.backgroundColor = UIColor.systemIndigo
-        bubble.setTitle("🔎", for: .normal)
-        bubble.titleLabel?.font = .systemFont(ofSize: 24)
         bubble.layer.cornerRadius = 26
+        // Shadow on the button layer (not clipped); the face image is rounded on
+        // its own imageView layer, so we keep both a soft shadow and a clean circle.
+        bubble.clipsToBounds = false
         bubble.layer.shadowColor = UIColor.black.cgColor
         bubble.layer.shadowOpacity = 0.3
         bubble.layer.shadowRadius = 6
         bubble.layer.shadowOffset = CGSize(width: 0, height: 3)
+        if let face = Self.faceImage {
+            bubble.backgroundColor = .white
+            bubble.setImage(face, for: .normal)
+            bubble.imageView?.contentMode = .scaleAspectFill
+            bubble.contentHorizontalAlignment = .fill
+            bubble.contentVerticalAlignment = .fill
+            bubble.imageView?.layer.cornerRadius = 26
+            bubble.imageView?.layer.masksToBounds = true
+            bubble.layer.borderWidth = 0.5
+            bubble.layer.borderColor = UIColor(white: 0, alpha: 0.12).cgColor
+        } else {
+            // Fallback if the bundled asset is missing.
+            bubble.backgroundColor = .systemIndigo
+            bubble.setTitle("🔎", for: .normal)
+            bubble.titleLabel?.font = .systemFont(ofSize: 24)
+        }
         bubble.addTarget(self, action: #selector(toggleMenu), for: .touchUpInside)
         bubble.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(dragBubble(_:))))
         rootView.addSubview(bubble)
@@ -146,27 +165,54 @@ final class PalaHub: NSObject {
         panel.layer.cornerRadius = 12
         panel.layer.borderWidth = 0.5
         panel.layer.borderColor = UIColor(white: 1, alpha: 0.15).cgColor
-        panel.translatesAutoresizingMaskIntoConstraints = false
         stack.translatesAutoresizingMaskIntoConstraints = false
         panel.addSubview(stack)
-        rootView.addSubview(panel)
-        rootView.bringSubviewToFront(bubble)
-
         NSLayoutConstraint.activate([
             stack.topAnchor.constraint(equalTo: panel.topAnchor, constant: 8),
             stack.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -8),
             stack.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 8),
-            stack.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -8),
-            panel.widthAnchor.constraint(equalToConstant: 200),
-            panel.bottomAnchor.constraint(equalTo: bubble.topAnchor, constant: -8)
+            stack.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -8)
         ])
-        let trailing = panel.trailingAnchor.constraint(equalTo: rootView.safeAreaLayoutGuide.trailingAnchor, constant: -12)
-        trailing.priority = .defaultHigh
-        trailing.isActive = true
+
+        // Measure the panel so we can place it with plain frames and flip its
+        // direction depending on where the bubble sits.
+        let panelWidth: CGFloat = 200
+        let contentSize = stack.systemLayoutSizeFitting(
+            CGSize(width: panelWidth - 16, height: 0),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel)
+        let panelHeight = ceil(contentSize.height) + 16
+
+        panel.frame = positionForMenu(width: panelWidth, height: panelHeight, in: rootView)
+        rootView.addSubview(panel)
+        rootView.bringSubviewToFront(bubble)
 
         menu = panel
         panel.alpha = 0
         UIView.animate(withDuration: 0.15) { panel.alpha = 1 }
+    }
+
+    /// Places the menu next to the bubble, flipping direction to stay on screen:
+    /// opens **upward** by default, but **downward** if it would clip the top;
+    /// horizontally it tracks the bubble's center, clamped inside the safe area
+    /// (so a bubble near the right edge opens to the **left**, and vice-versa).
+    private func positionForMenu(width: CGFloat, height: CGFloat, in rootView: UIView) -> CGRect {
+        let margin: CGFloat = 12
+        let gap: CGFloat = 8
+        let safe = rootView.safeAreaInsets
+        let b = bubble.frame
+
+        // Vertical: prefer above the bubble; drop below if that would clip the top.
+        let yAbove = b.minY - gap - height
+        let y = (yAbove < safe.top + margin) ? b.maxY + gap : yAbove
+
+        // Horizontal: center on the bubble, then clamp within the safe area.
+        var x = b.midX - width / 2
+        let minX = safe.left + margin
+        let maxX = rootView.bounds.width - safe.right - margin - width
+        x = maxX >= minX ? min(max(x, minX), maxX) : minX
+
+        return CGRect(x: x, y: y, width: width, height: height)
     }
 
     private func menuRow(_ item: Item) -> UIView {

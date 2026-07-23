@@ -1,18 +1,21 @@
 <div align="center">
 
-<img src="docs/logo.png" width="150" alt="Pala logo">
+<img src="docs/logo.png" width="140" alt="Pala logo">
 
 # Pala
 
-**A floating in-app debug hub for iOS.** Tap the 🔎 bubble to open a tool menu:
-inspect any element, log to an in-app console, and overlay grids / frames / touches —
-all without leaving your app.
+### *Only the dead see it.*
 
-A lightweight, zero-dependency debugging toolkit for iOS.
+**A floating in-app debug hub for iOS.**
+Tap the **Pala** bubble to open a tool menu — inspect any element's font, color and
+layout, outline every view, and drop alignment grids — all without leaving your app.
+
+Lightweight, **zero-dependency**, drop-in. One import, one call.
 
 ![Platform](https://img.shields.io/badge/platform-iOS%2016%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.1-blueviolet)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
 </div>
@@ -21,29 +24,34 @@ A lightweight, zero-dependency debugging toolkit for iOS.
 
 ## Screenshots
 
-| Debug hub menu | UI Inspector (browse) | Console | Layout overlays |
+| Debug hub menu | UI Inspector (browse) | Inspect all | Layout overlays |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/hub-menu.png" width="200"> | <img src="docs/inspector.png" width="200"> | <img src="docs/console.png" width="200"> | <img src="docs/layout.png" width="200"> |
+| <img src="docs/hub-menu.png" width="200"> | <img src="docs/inspector.png" width="200"> | <img src="docs/inspect-all.png" width="200"> | <img src="docs/layout.png" width="200"> |
 
 ---
 
-## Tools
+## What it does
 
-A draggable **🔎 bubble** sits above your app. Tap it for the menu:
+A draggable **Pala bubble** floats above your app. Tap it for the menu:
 
 - **🎯 UI Inspector** — enter inspect mode, then tap elements to browse their
-  **frame · font · color name · padding · layer** info **without firing the app's own
-  actions**. Step overlapping layers with `◀ i/n ▶`; tap **✕** to exit.
-  Reads UIKit views directly, un-annotated SwiftUI via the **accessibility tree**, and
-  drawn images/shapes via **CALayer hit-testing**.
+  **size · font · color · padding · layer** info **without firing the app's own actions**.
+  Step through overlapping layers with `◀ 1/n ▶`; tap **✕** to exit. Reads UIKit views
+  directly, un-annotated SwiftUI via the **accessibility tree**, and drawn images/shapes
+  via **CALayer hit-testing**.
 - **🌈 Inspect all** — outline every element with a colored rectangle and write its
-  properties inline next to it, all at once.
-- **📋 Console** — a floating, draggable log viewer with level badges, category, search,
-  filter, clear and share. Log from anywhere with `Pala.log(...)`.
+  properties inline, all at once.
 - **▦ Grid** — a precision alignment grid overlay.
 - **⬚ Show frames** — outline every on-screen view's frame, live.
 
-Zero dependencies. DEBUG-only. Compiles only where UIKit is available.
+Log structured events from anywhere with `Pala.log(...)`. The bubble menu shows the
+running **version** so you can confirm a fresh build is installed.
+
+> **Smart placement** — the menu opens **upward** from the bubble by default, but flips
+> **downward** when the bubble is near the top of the screen, and shifts **left / right**
+> to stay fully on-screen wherever you drag the bubble.
+
+Zero dependencies · DEBUG-only · compiles only where UIKit is available.
 
 ---
 
@@ -54,23 +62,23 @@ Zero dependencies. DEBUG-only. Compiles only where UIKit is available.
 1. **File ▸ Add Package Dependencies…**
 2. Paste the URL:
    ```
-   https://github.com/ekucet/Pala.git
+   https://github.com/ekucet/pala.git
    ```
-3. Set **Dependency Rule → Up to Next Major Version** and enter `4.0.0`.
+3. Set **Dependency Rule → Up to Next Major Version** and enter `1.0.0`.
    > ⚠️ If the dialog defaults to **Branch → main**, that's Xcode remembering a previous
-   > choice. Switch the dropdown to *Up to Next Major Version* (or run **File ▸ Packages
-   > ▸ Reset Package Caches** and re-add) so you always get the latest tagged release.
+   > choice. Switch it to *Up to Next Major Version* (or **File ▸ Packages ▸ Reset Package
+   > Caches** and re-add) so you always get the latest tagged release.
 4. **Add Package** → add the **Pala** library to your app target.
 
 ### In `Package.swift`
 
 ```swift
-.package(url: "https://github.com/ekucet/Pala.git", from: "4.0.0"),
+.package(url: "https://github.com/ekucet/pala.git", from: "1.0.0"),
 // then, in your target dependencies:
-.product(name: "Pala", package: "Pala"),
+.product(name: "Pala", package: "pala"),
 ```
 
-> **Tip:** enable it only inside `#if DEBUG` so it never ships in Release builds.
+> **Tip:** gate it behind `#if DEBUG` so it never ships in Release builds.
 
 ---
 
@@ -88,7 +96,7 @@ struct MyApp: App {
         WindowGroup {
             ContentView()
             #if DEBUG
-                .enablePala()          // shows the floating 🔎 bubble
+                .enablePala()      // shows the floating Pala bubble
             #endif
         }
     }
@@ -109,38 +117,54 @@ func application(_ app: UIApplication,
 }
 ```
 
-Turn it off with `Pala.disable()`.
-
-### Logging to the Console tool
+Turn it off with `Pala.disable()`. Record logs with:
 
 ```swift
 Pala.info("User signed in", category: "Auth")
 Pala.warning("Cache miss", category: "Cache")
 Pala.error("Request failed: \(error)", category: "Network")
-Pala.debug("payload=\(payload)")
 ```
 
 ---
 
-## Precise font/color for pure SwiftUI (`.palaInspect`)
+## Precise font & color for pure SwiftUI
 
-**SwiftUI `Text` is not backed by a `UILabel`** — it's drawn with CoreGraphics, so no
+**SwiftUI `Text` is not backed by a `UILabel`** — it's drawn into a `CALayer`, so no
 public API exposes its resolved font. Un-annotated elements are still identified
-automatically (frame · label · role via accessibility, shown with an **A11y** badge),
-but for exact typography/color attach metadata:
+automatically (size · label · role via accessibility), but for **exact typography and
+color** attach metadata with `.palaInspect`:
 
 ```swift
 Text("Sign In")
     .font(.headline)
     .foregroundColor(.white)
-    .padding(.vertical, 14).padding(.horizontal, 32)
-    .background(Color.blue)
     .palaInspect("Sign In Button",
-                    font: .preferredFont(forTextStyle: .headline),
-                    textColor: .white,
-                    background: .systemBlue,
-                    padding: UIEdgeInsets(top: 14, left: 32, bottom: 14, right: 32))
+                 font: .headline,          // reflected → "System · 17pt · semibold"
+                 textColor: .white,
+                 background: .systemBlue)
 ```
+
+| Reflected SwiftUI font | Fed from a design system (no `import Pala`) |
+|:---:|:---:|
+| <img src="docs/swiftui-inspector.png" width="200"> | <img src="docs/uikit-inspector.png" width="200"> |
+
+---
+
+## Feeding the inspector from a design system (no import)
+
+If your fonts come from a shared **design-system package**, you don't want it to depend
+on a debug tool. Pala keeps its metadata in a **process-global store** (an associated
+object on `UIApplication`, keyed by an interned selector, holding only Foundation/UIKit
+values). Any module can write to that store **without importing Pala**, and the hub reads
+it as if `.palaInspect` had been applied.
+
+This lets a `TypographyModifier` surface every styled view's font in the inspector while
+keeping the design system dependency-free. Toggle it on from the app (which reliably
+knows its own build config), since SwiftPM package targets don't always receive `DEBUG`
+under custom build configurations.
+
+See [`Example/App/ContentView.swift`](Example/App/ContentView.swift) (`PalaFontBridge`)
+for the ~20-line bridge and the exact store shape.
 
 ---
 
@@ -149,22 +173,22 @@ Text("Sign In")
 | Component | Responsibility |
 |---|---|
 | `Pala` | Public API: `enable()` / `disable()` / `log(...)`. |
-| `PalaHub` | The passthrough overlay window, the draggable bubble, the tool menu, and the grid/frames/touch overlays. |
+| `PalaHub` | Passthrough overlay window, the draggable bubble, the smart-positioned tool menu, and the grid/frames overlays. |
 | `InspectorController` | Presents the UI Inspector (inspect mode + inspect-all). |
 | `ViewInspector` | Gathers candidates from every source (SwiftUI registry, accessibility, CALayer, UIKit chain) and ranks them by area + information richness. |
-| `PalaConsole` / `ConsolePanelView` | Log store + the floating console viewer. |
-| `LayoutTools` | Grid, all-frames, and touch-indicator overlays. |
+| `InspectorRegistry` | The process-global metadata store shared across every linked copy of Pala. |
+| `LayoutTools` | Grid and all-frames overlays. |
 
 The hub window passes touches through to your app except on its own controls, and the
-inspector overlay is shown **without** becoming key, so it never disturbs your app's
+inspector overlay is shown **without** becoming key — so it never disturbs your app's
 first responder or keyboard.
 
 ---
 
 ## Example app
 
-`Example/` contains a runnable demo plus UI tests that drive the hub. The Xcode project
-is generated (not committed):
+`Example/` contains a runnable demo plus UI tests that drive the hub (and generate the
+screenshots above). The Xcode project is generated, not committed:
 
 ```bash
 cd Example
@@ -180,14 +204,6 @@ xcodebuild test -project Example.xcodeproj -scheme Example \
 - iOS 16+
 - Swift 5.9+
 - UIKit-based apps, or SwiftUI apps built on top of UIKit
-
-## Credits
-
-Design inspired by the strengths of several great debugging tools — a floating tool hub
-([DebugSwift](https://github.com/DebugSwift/DebugSwift)), layout/render overlays
-([Loupe](https://github.com/Aeastr/Loupe)), a floating log console
-([DebugViewer](https://github.com/istsest/DebugViewer-for-SwiftUI)), and runtime panels
-([DebugTweak](https://github.com/istsest/DebugTweak-for-SwiftUI)).
 
 ## License
 

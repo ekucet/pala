@@ -2,6 +2,20 @@
 
 All notable changes to **Pala** are documented here.
 
+## [1.0.1] — 2026-07-23
+
+### Added
+- **New brand mark.** The bubble now shows the Pala face (sunglasses silhouette) as a
+  clean circle, replacing the magnifier glyph; same art ships as the Example app icon.
+  The image is embedded in-source (base64) so the library still needs **no resource
+  bundle** and renders identically however it's integrated.
+- **Smart menu placement.** The tool menu opens **upward** by default but flips
+  **downward** when the bubble sits near the top, and clamps **left/right** to stay fully
+  on screen wherever the bubble is dragged.
+
+### Changed
+- README rewritten with fresh screenshots and the new brand mark.
+
 ## [1.0.0] — 2026-07-23
 
 First release under the **Pala** name — rebranded from *Pablogy*, feature-equivalent
