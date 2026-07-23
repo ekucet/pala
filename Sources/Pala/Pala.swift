@@ -22,7 +22,7 @@ public enum Pala {
 
     /// The running Pala version — shown in the hub menu so you can confirm which
     /// build is actually installed (a stale app binary is the usual "nothing changed").
-    public static let version = "4.0.9"
+    public static let version = "1.0.0"
 
     /// Installs the floating debug hub.
     @MainActor

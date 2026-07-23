@@ -2,6 +2,13 @@
 
 All notable changes to **Pala** are documented here.
 
+## [1.0.0] — 2026-07-23
+
+First release under the **Pala** name — rebranded from *Pablogy*, feature-equivalent
+to the former 4.0.9. Also fixes the stale color/font unit tests and makes the
+registry store resilient when `UIApplication.shared` is unavailable (hostless tests).
+Earlier entries below are retained as historical context under the old name.
+
 ## [4.0.9] — 2026-07-23
 
 ### Fixed
@@ -10,7 +17,7 @@ All notable changes to **Pala** are documented here.
   a `.palaInspect` baked into a shared `TypographyModifier` registered into a copy the
   hub could not see, so annotated fonts never appeared. The registry is now **process-global**
   (stored on `UIApplication` via an interned selector key), so any copy's registrations are
-  visible to the hub. Reverted the dynamic-library workaround � static linking is fine now.
+  visible to the hub. Reverted the dynamic-library workaround � static linking is fine now.
 
 ## [4.0.7] — 2026-07-23
 
