@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Xcode
+*.xcodeproj/
+!Example/gen_project.rb
+xcuserdata/
+DerivedData/
+*.xcuserstate
+*.xcresult
+
+# Example app (proje dosyası gen_project.rb ile üretilir)
+Example/Example.xcodeproj/
