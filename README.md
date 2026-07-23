@@ -165,10 +165,15 @@ Pala.registerColors([
 
 A registered token wins over the system color it happens to resemble.
 
-And because SwiftUI `Text` exposes **no** color property, tapping one reports a
-**Drawn color** sampled from the rendered pixels — the dominant opaque color, i.e. the
-ink you actually see. That works no matter how the color was applied
-(`foregroundColor`, `foregroundStyle`, or your own modifier).
+And because SwiftUI `Text` exposes **no** color property, tapping one still reports a
+**Color** row, sampled from the rendered pixels — the ink you actually see, right next
+to the font. Pala reads a per-text bitmap layer when there is one, and otherwise renders
+the element's region and separates the glyphs from the background. Either way it works
+no matter how the color was applied (`foregroundColor`, `foregroundStyle`, or your own
+modifier).
+
+> Sampled colors are read back from rendered pixels, so antialiasing can shift them by a
+> shade (`#FEFEFE` for pure white) and alpha is not recovered.
 
 ---
 
